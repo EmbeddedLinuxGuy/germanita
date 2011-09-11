@@ -19,7 +19,6 @@ class MyHandler(BaseHTTPRequestHandler):
         self.tty.parity = serial.PARITY_NONE
         self.tty.stopbits = 1
 
-        print cmd
         self.tty.write(cmd)
 
         self.tty.close()
@@ -72,7 +71,9 @@ class MyHandler(BaseHTTPRequestHandler):
         print "Content: " + self.raw_post
         self.data = cgi.parse_qsl(self.raw_post)[0][1]
         print "Data: " + self.data
-        self.cmd = self.data[1:-1]
+        self.cmd = chr(int(self.data))
+
+        print "Command: [" + self.cmd+ "]"
 
         self.do_serial(self.cmd)
 
