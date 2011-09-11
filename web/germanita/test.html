@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      // declare a generic object that will handle callback triggers from the SWF
+      var cb = {};
+      
+      // document is fully loaded and ready to be manipulated
+      $(document).ready(function() {
+      
+        // parameters to be used in embedding the Rdio SWF
+        var flashvars = {
+          'playbackToken': "GAlObHM3_____3QzNnhtNGZ0YTJtZW12bnN5ZjJzMzQ5cmxvY2FsaG9zdDQRaJv3R5ifrHByFC52RwU==", // This is generated from the Web Service API's getPlaybackToken() method
+          'domain': "localhost", // Use the same domain that your site is hosted on. Use this same domain when making the getPlaybackToken() call as well
+          'listener': 'cb' // This is the JavaScript callback function that will be called when the SWF triggers events
+          };
+        var params = {
+          'allowScriptAccess': 'always'
+        };
+        var attributes = {};
+        
+        // Embed the SWF file using the parameters defined above.
+        swfobject.embedSWF("http://www.rdio.com/api/swf", 'api_swf', 1, 1, '9.0.0', 'expressInstall.swf', flashvars, params, attributes);
+
+	  	$('#play').click(function() {
+	    	player().rdio_play($('#play_key').val());
+	  	});
+	
+	  	$('#stop').click(function() { player().rdio_stop(); });
+	  	$('#pause').click(function() { player().rdio_pause(); });
+	  	$('#previous').click(function() { player().rdio_previous(); });
+	  	$('#next').click(function() { player().rdio_next(); });
+
+      });
+      
+      // Triggered when the SWF is loaded and ready to receive requests  
+      cb.ready = function() {
+        // Queue up and play track.
+        player().rdio_play('t135662');      
+      }
+      
+      // basic function to return a reference to the Rdio SWF player
+      function player() {
+        return $('#api_swf').get(0);
+      }
+    </script>
+  </head>
+  <body>
+	
+	
+	<input id="play_key" value="a254895"><button id="play">Play</button><br>
+	<button id="stop">Stop</button>
+	<button id="pause">Pause</button>
+	<button id="previous">Previous</button>
+	<button id="next">Next</button>
+	
+    <!-- the following HTML element will be replaced with the Rdio SWF after the swfobject.embedSWF method is called -->
+    <div id="api_swf"></div>
+  </body>
+</html>
