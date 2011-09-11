@@ -1,0 +1,95 @@
+#!/usr/bin/python
+
+# By Jesse Zbikowski, Embedded Linux Guy, modernhacker.com
+# Derived from webserver.py, Copyright Jon Berg, turtlemeat.com
+
+import string,cgi,time
+from os import curdir, sep
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import serial
+
+PORT = "/dev/ttyUSB0"
+BAUDRATE = 115200
+
+class MyHandler(BaseHTTPRequestHandler):
+
+    def do_serial(self, cmd):
+        self.tty = serial.Serial(PORT, BAUDRATE, timeout=10)
+        self.tty.bytesize = 8
+        self.tty.parity = serial.PARITY_NONE
+        self.tty.stopbits = 1
+
+        print cmd
+        self.tty.write(cmd)
+
+        self.tty.close()
+
+        return
+        
+    def do_GET(self):
+        try:
+            if self.path.endswith(".html"):
+                self.contentType = 'text/html'
+            elif self.path.endswith(".js"):
+                self.contentType = 'text/javascript'
+            elif self.path.endswith(".css"):
+                self.contentType = 'text/css'
+            elif self.path.endswith(".gif"):
+                self.contentType = "application/gif"
+            elif self.path.endswith(".png"):
+                self.contentType = "application/png"
+            else:
+                return # don't hand back just anything
+
+            f = open(curdir + sep + self.path) #self.path has /test.html
+#note that this potentially makes every file on your computer readable by the internet
+
+            self.send_response(200)
+            self.send_header('Content-type', self.contentType)
+            self.end_headers()
+            self.wfile.write(f.read())
+            f.close()
+            return
+
+        except IOError:
+            self.send_error(404,'File Not Found: %s' % self.path)
+     
+
+    def do_POST(self):
+        global rootnode
+
+        if self.path.endswith(".orb"):   #our dynamic content
+            self.send_response(200)
+            self.send_header('Content-type',	'text/html')
+            self.end_headers()
+            self.wfile.write("hey, today is the" + str(time.localtime()[7]))
+            self.wfile.write(" day in the year " + str(time.localtime()[0]))
+            return
+
+        self.length = int(self.headers.getheader('content-length'))
+        print "Content length: " + str(self.length)
+        self.raw_post = self.rfile.read(self.length)
+        print "Content: " + self.raw_post
+        self.data = cgi.parse_qsl(self.raw_post)[0][1]
+        print "Data: " + self.data
+        self.cmd = self.data[1:-1]
+
+        self.do_serial(self.cmd)
+
+        self.send_response(200)
+        self.send_header('Content-type',	'text/plain')
+        self.end_headers()
+        self.wfile.write(self.data)
+
+def main():
+    try:
+        server = HTTPServer(('', 8000), MyHandler)
+        print 'started httpserver...'
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print '^C received, shutting down server'
+        server.socket.close()
+
+if __name__ == '__main__':
+    main()
+
