@@ -65,6 +65,7 @@ class MyHandler(BaseHTTPRequestHandler):
             self.wfile.write(" day in the year " + str(time.localtime()[0]))
             return
 
+        print self.path
         self.length = int(self.headers.getheader('content-length'))
         print "Content length: " + str(self.length)
         self.raw_post = self.rfile.read(self.length)
@@ -72,9 +73,13 @@ class MyHandler(BaseHTTPRequestHandler):
         self.data = cgi.parse_qsl(self.raw_post)[0][1]
         print "Data: " + self.data
         self.cmd = chr(int(self.data))
-
         print "Command: [" + self.cmd+ "]"
-
+        if self.path.count("volume") > 0:
+            self.do_serial("v")
+            print "Setting volume"
+        else:
+            self.do_serial("b")
+            print "Setting bpm"
         self.do_serial(self.cmd)
 
         self.send_response(200)
